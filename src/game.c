@@ -10,15 +10,21 @@ void render_menu(pet_t pet)
     {
         printf("\n%s is getting hungry...", pet.name);
     }
-    else if (pet.health <= 3)
+    if (pet.thirst <= 3)
+    {
+        printf("\n%s is feeling quite thirsty...", pet.name);
+    }
+    if (pet.health <= 3)
     {
         printf("\n%s is not feeling too well... maybe love will heal them.", pet.name);
     }
     printf("\n%s is at %d health.", pet.name, pet.health);
     printf("\n%s is at %d hunger.", pet.name, pet.hunger);
+    printf("\n%s is at %d thirst.", pet.name, pet.thirst);
     fputs("\n(1) Feed", stdout);
-    fputs("\n(2) Pet", stdout);
-    fputs("\n(3) Exit", stdout);
+    fputs("\n(2) Give water", stdout);
+    fputs("\n(3) Pet", stdout);
+    fputs("\n(4) Exit", stdout);
 }
 
 /**
@@ -27,16 +33,29 @@ void render_menu(pet_t pet)
 */
 void tick(pet_t* pet)
 {
-    if (pet->hunger == 0)
-    {
-        pet->health--;
-    }
     if (rand() % 2 == 0)
     {
         if (pet->hunger > 0)
         {
             pet->hunger--;
         }
+    }
+    if (rand() % 3 == 1)
+    {
+        if (pet->thirst > 0)
+        {
+            pet->thirst--;
+        }
+    }
+    if (pet->hunger == 0)
+    {
+        pet->health--;
+        pet->hunger = 0;
+    }
+    if (pet->thirst <= 0)
+    {
+        pet->health--;
+        pet->thirst = 0;
     }
 }
 
@@ -45,9 +64,12 @@ void game_loop()
     int gameticks = 0;
     bool is_running = true;
     pet_t pet = {
-        .hunger = 10,
         .health = 5,
         .maxhealth = 5,
+        .hunger = 5,
+        .maxhunger = 5,
+        .thirst = 5,
+        .maxthirst = 5,
     };
 
     time_t t;
@@ -80,10 +102,22 @@ void game_loop()
                 else
                 {
                     printf("\n%s is gobbling up the food.", pet.name);
+                    pet.thirst--;
+                }
+                break;
+            case 2:
+                err = give_water_pet(&pet);
+                if (err != 0)
+                {
+                    printf("\n%s is not currently thirsty.", pet.name);
+                }
+                else
+                {
+                    printf("\n%s is slobbering the water everywhere.", pet.name);
                 }
                 break;
             /* Petting your pet heals them... for some reason */
-            case 2:
+            case 3:
                 err = heal_pet(&pet);
                 if (err != 0)
                 {
@@ -94,7 +128,7 @@ void game_loop()
                     printf("\n%s is feeling better now.", pet.name);
                 }
                 break;
-            case 3:
+            case 4:
                 fputs("\nGoodbye.", stdout);
                 is_running = false;
                 break;
@@ -106,7 +140,7 @@ void game_loop()
 
         if (pet.health <= 0)
         {
-            printf("\n%s is not feeling too well... Game over. :(", pet.name);
+            printf("\n%s ran away to a nice farm... Game over. :(", pet.name);
             is_running = false;
         }
 
